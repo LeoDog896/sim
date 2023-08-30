@@ -38,7 +38,13 @@
 		]
 	}
 
+	function isConnection(connection: [number | undefined, number | undefined]): connection is Connection {
+		return connection[0] !== undefined && connection[1] !== undefined;
+	}
+
 	let hoveredNode: number | undefined = undefined;
+	let selectedNodes: [number | undefined, number | undefined] = [undefined, undefined];
+
 	$: {
 		
 		for (let i = 0; i < game.nodeCount; i++) {
@@ -56,21 +62,36 @@
 
     let render: Render;
 	$: render = ({ context, width, height }) => {
-		context.setLineDash([15, 5]);
-		context.strokeStyle = "gray";
+		context.strokeStyle = "lightgray";
 		for (let i = 0; i < game.nodeCount; i++) {
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
 			let startIndex = i;
 
+			// mutates stroke, lineWidth, lineDash
 			for (let j = startIndex; j < game.nodeCount; j++) {
 				const jAngle = j * (2 * Math.PI / game.nodeCount);
 				const [jx, jy] = angleToCoords(jAngle, width, height);
 
-				if (j == hoveredNode || i == hoveredNode) {
+				if (j == hoveredNode || i == hoveredNode || selectedNodes.includes(j) || selectedNodes.includes(i)) {
 					context.strokeStyle = "green";
+
+					if ((selectedNodes.includes(j) && i == hoveredNode) || (selectedNodes.includes(i) && j == hoveredNode)) {
+						context.lineWidth = 3;
+					} else {
+						context.lineWidth = 1;
+					}
 				} else {
-					context.strokeStyle = "gray";
+					context.strokeStyle = "lightgray";
+					context.lineWidth = 1;
+				}
+
+				if (game.connections.some(connection => connection.includes(i) && connection.includes(j))) {
+					context.setLineDash([]);
+					context.lineWidth = 2;
+					context.strokeStyle = "black";
+				} else {
+					context.setLineDash([15, 5]);
 				}
 
 				context.beginPath();
@@ -80,13 +101,25 @@
 			}
 		}
 
+		context.setLineDash([]);
 		context.strokeStyle = "black";
 		for (let i = 0; i < game.nodeCount; i++) {
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
 
-			if (i == hoveredNode) {
+			if (i == hoveredNode || selectedNodes.includes(i)) {
 				context.fillStyle = 'green';
+				context.strokeStyle = 'green';
+
+				if (selectedNodes.includes(i)) {
+					context.beginPath();
+					context.arc(
+						x, y,
+						radius * 3 / 2,
+						0, 2 * Math.PI
+					);
+					context.stroke();
+				}
 			} else {
 				context.fillStyle = 'black';
 			}
@@ -109,10 +142,24 @@
 		<h1>Sim</h1>
 		<p>A simple combinatorial paper and pencil game (<a href="https://en.wikipedia.org/wiki/Sim_(pencil_game)">wikipedia</a>). Every player takes a turn - the first player to make a complete triangle, from dot to dot, loses.</p>
 	</div>
-	<Canvas on:mousemove={({ offsetX, offsetY }) => {
+	<Canvas on:click={() => {
+		if (hoveredNode !== undefined) {
+			if (selectedNodes[0] === undefined) {
+				selectedNodes[0] = hoveredNode;
+			} else if (selectedNodes[1] === undefined) {
+				selectedNodes[1] = hoveredNode;
+				console.assert(isConnection(selectedNodes), "selectedNodes is not a connection");
+				if (isConnection(selectedNodes)) {
+					game.connections.push(normalizeConnection(selectedNodes));
+					selectedNodes = [undefined, undefined];
+				}
+			}
+		}
+	}}
+	on:mousemove={({ offsetX, offsetY }) => {
 		mouseX = offsetX;
 		mouseY = offsetY;
-	}} class="canvas" {width} {height}>
+	}} class="canvas {hoveredNode === undefined ? "" : "active"}" {width} {height}>
 		<Layer {render} />
 	</Canvas>
 
@@ -123,6 +170,10 @@
 	.description {
 		max-width: 50ch;
 		text-align: center;
+	}
+
+	:global(.active) {
+		cursor: pointer;
 	}
 
 	main {
