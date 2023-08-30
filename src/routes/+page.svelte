@@ -4,6 +4,9 @@
 	type Node = number;
 	type Connection = [a: Node, b: Node];
 	type Vector = [x: number, y: number];
+
+	let width = 640;
+	let height = 640;
 	
 	const normalizeConnection = (connection: Connection) => connection.sort((a, b) => a - b);
 	let nodeCount = 6;
@@ -35,21 +38,39 @@
 		]
 	}
 
+	let hoveredNode: number | undefined = undefined;
+	$: {
+		
+		for (let i = 0; i < game.nodeCount; i++) {
+			const angle = i * (2 * Math.PI / game.nodeCount);
+			const [x, y] = angleToCoords(angle, width, height);
+
+			if (Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2)) < radius) {
+				hoveredNode = i;
+				break;
+			} else {
+				hoveredNode = undefined;
+			}
+		}
+	}
+
     let render: Render;
 	$: render = ({ context, width, height }) => {
+		context.setLineDash([15, 5]);
 		context.strokeStyle = "gray";
 		for (let i = 0; i < game.nodeCount; i++) {
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
-			for (let j = 0; j < game.nodeCount; j++) {
-				if (i == j) continue;
+			let startIndex = i;
+
+			for (let j = startIndex; j < game.nodeCount; j++) {
 				const jAngle = j * (2 * Math.PI / game.nodeCount);
 				const [jx, jy] = angleToCoords(jAngle, width, height);
 
-				if (Math.sqrt(Math.pow(mouseX - jx, 2) + Math.pow(mouseY - jy, 2)) < radius / 2) {
-					context.strokeStyle = 'green';
+				if (j == hoveredNode || i == hoveredNode) {
+					context.strokeStyle = "green";
 				} else {
-					context.strokeStyle = 'gray';
+					context.strokeStyle = "gray";
 				}
 
 				context.beginPath();
@@ -64,7 +85,7 @@
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
 
-			if (Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2)) < radius / 2) {
+			if (i == hoveredNode) {
 				context.fillStyle = 'green';
 			} else {
 				context.fillStyle = 'black';
@@ -91,7 +112,7 @@
 	<Canvas on:mousemove={({ offsetX, offsetY }) => {
 		mouseX = offsetX;
 		mouseY = offsetY;
-	}} class="canvas" width={640} height={640}>
+	}} class="canvas" {width} {height}>
 		<Layer {render} />
 	</Canvas>
 
