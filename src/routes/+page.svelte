@@ -22,7 +22,10 @@
 		connections: []
 	};
 
-	const padding = 100;
+	let mouseX = 0;
+	let mouseY = 0;
+
+	const padding = 50;
 
 	function angleToCoords(angle: number, width: number, height: number): Vector {
 		return [
@@ -38,12 +41,20 @@
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
 			for (let j = 0; j < game.nodeCount; j++) {
+				if (i == j) continue;
 				const jAngle = j * (2 * Math.PI / game.nodeCount);
 				context.beginPath();
 				context.moveTo(x, y);
 				const [jx, jy] = angleToCoords(jAngle, width, height);
 				context.lineTo(jx, jy);
 				context.stroke();
+
+				if (Math.sqrt(Math.pow(mouseX - jx, 2) + Math.pow(mouseY - jy, 2)) < padding) {
+					context.beginPath();
+					context.moveTo(mouseX, mouseY);
+					context.lineTo(jx, jy);
+					context.stroke();
+				}
 			}
 		}
 
@@ -61,11 +72,45 @@
 			)
 			context.fill()
 		}
+
+		context.beginPath();
+		context.arc(mouseX, mouseY, 10, 0, 2 * Math.PI);
+		context.fill()
 	};
 </script>
 
-<Canvas width={640} height={640}>
-	<Layer {render} />
-</Canvas>
+<main>
+	<div class="description">
+		<h1>Sim</h1>
+		<p>A simple combinatorial paper and pencil game (<a href="https://en.wikipedia.org/wiki/Sim_(pencil_game)">wikipedia</a>). Every player takes a turn - the first player to make a complete triangle, from dot to dot, loses.</p>
+	</div>
+	<Canvas on:mousemove={({ offsetX, offsetY }) => {
+		mouseX = offsetX;
+		mouseY = offsetY;
+	}} class="canvas" width={640} height={640}>
+		<Layer {render} />
+	</Canvas>
 
-<input type="number" bind:value={nodeCount} />
+	<input type="number" bind:value={nodeCount} />
+</main>
+
+<style>
+	.description {
+		max-width: 50ch;
+		text-align: center;
+	}
+
+	main {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-direction: column;
+		height: 100%;
+		margin: 2rem;
+	}
+
+	:global(.canvas) {
+		border: 1px solid black;
+		border-radius: 1rem;
+	}
+</style>
