@@ -26,6 +26,7 @@
 	let mouseY = 0;
 
 	const padding = 50;
+	const radius = 10;
 
 	function angleToCoords(angle: number, width: number, height: number): Vector {
 		return [
@@ -43,18 +44,18 @@
 			for (let j = 0; j < game.nodeCount; j++) {
 				if (i == j) continue;
 				const jAngle = j * (2 * Math.PI / game.nodeCount);
+				const [jx, jy] = angleToCoords(jAngle, width, height);
+
+				if (Math.sqrt(Math.pow(mouseX - jx, 2) + Math.pow(mouseY - jy, 2)) < radius / 2) {
+					context.strokeStyle = 'green';
+				} else {
+					context.strokeStyle = 'gray';
+				}
+
 				context.beginPath();
 				context.moveTo(x, y);
-				const [jx, jy] = angleToCoords(jAngle, width, height);
 				context.lineTo(jx, jy);
 				context.stroke();
-
-				if (Math.sqrt(Math.pow(mouseX - jx, 2) + Math.pow(mouseY - jy, 2)) < padding) {
-					context.beginPath();
-					context.moveTo(mouseX, mouseY);
-					context.lineTo(jx, jy);
-					context.stroke();
-				}
 			}
 		}
 
@@ -62,20 +63,23 @@
 		for (let i = 0; i < game.nodeCount; i++) {
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
+
+			if (Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2)) < radius / 2) {
+				context.fillStyle = 'green';
+			} else {
+				context.fillStyle = 'black';
+			}
+
 			context.beginPath()
 			context.arc(
 				x,
 				y,
-				10,
+				radius,
 				0,
 				2 * Math.PI
 			)
 			context.fill()
 		}
-
-		context.beginPath();
-		context.arc(mouseX, mouseY, 10, 0, 2 * Math.PI);
-		context.fill()
 	};
 </script>
 
