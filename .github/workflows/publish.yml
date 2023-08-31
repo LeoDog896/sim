@@ -45,7 +45,7 @@ jobs:
       - name: Download a single artifact
         uses: actions/download-artifact@v3
         with:
-          name: my-artifact
+          name: build-output
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
