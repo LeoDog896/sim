@@ -32,7 +32,7 @@ jobs:
       - name: Upload built project output
         uses: actions/upload-artifact@v3
         with:
-            name: build-output
+            name: build
             path: build
   pages:
     needs: checks
