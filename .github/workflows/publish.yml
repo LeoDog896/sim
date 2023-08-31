@@ -29,6 +29,11 @@ jobs:
         run: yarn install
       - name: Build page
         run: yarn build
+      - name: Upload built project output
+        uses: actions/upload-artifact@v3
+        with:
+            name: build-output
+            path: build
   pages:
     needs: checks
     if: github.event_name != 'pull_request'
@@ -37,6 +42,10 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
