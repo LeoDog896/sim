@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Canvas, Layer, type Render } from 'svelte-canvas';
-	import { Connect } from 'vite';
 
 	type Node = number;
 	type Connection = [a: Node, b: Node];
