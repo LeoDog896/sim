@@ -42,10 +42,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download a single artifact
+      - name: Download Artifacts
         uses: actions/download-artifact@v3
-        with:
-          name: build-output
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
