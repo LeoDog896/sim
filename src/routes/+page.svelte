@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Canvas, Layer, type Render } from 'svelte-canvas';
+	import { Connect } from 'vite';
 
 	type Node = number;
 	type Connection = [a: Node, b: Node];
@@ -45,8 +46,15 @@
 	let hoveredNode: number | undefined = undefined;
 	let selectedNodes: [number | undefined, number | undefined] = [undefined, undefined];
 
+	const colors = {
+		p1: "#2274A5",
+		p2: "#E83F6F",
+		sketch: "lightgray"
+	}
+
+	$: currentColor = game.connections.length % 2 == 0 ? colors.p1 : colors.p2;
+
 	$: {
-		
 		for (let i = 0; i < game.nodeCount; i++) {
 			const angle = i * (2 * Math.PI / game.nodeCount);
 			const [x, y] = angleToCoords(angle, width, height);
@@ -74,7 +82,7 @@
 				const [jx, jy] = angleToCoords(jAngle, width, height);
 
 				if (j == hoveredNode || i == hoveredNode || selectedNodes.includes(j) || selectedNodes.includes(i)) {
-					context.strokeStyle = "green";
+					context.strokeStyle = currentColor
 
 					if ((selectedNodes.includes(j) && i == hoveredNode) || (selectedNodes.includes(i) && j == hoveredNode)) {
 						context.lineWidth = 3;
@@ -87,9 +95,14 @@
 				}
 
 				if (game.connections.some(connection => connection.includes(i) && connection.includes(j))) {
+					const index = game.connections.findIndex(connection => connection.includes(i) && connection.includes(j));
 					context.setLineDash([]);
 					context.lineWidth = 2;
-					context.strokeStyle = "black";
+					if (index % 2 == 0) {
+						context.strokeStyle = colors.p1;
+					} else {
+						context.strokeStyle = colors.p2;
+					}
 				} else {
 					context.setLineDash([15, 5]);
 				}
@@ -108,8 +121,8 @@
 			const [x, y] = angleToCoords(angle, width, height);
 
 			if (i == hoveredNode || selectedNodes.includes(i)) {
-				context.fillStyle = 'green';
-				context.strokeStyle = 'green';
+				context.fillStyle = currentColor;
+				context.strokeStyle = currentColor;
 
 				if (selectedNodes.includes(i)) {
 					context.beginPath();
@@ -150,7 +163,7 @@
 				selectedNodes[1] = hoveredNode;
 				console.assert(isConnection(selectedNodes), "selectedNodes is not a connection");
 				if (isConnection(selectedNodes)) {
-					game.connections.push(normalizeConnection(selectedNodes));
+					game.connections = [...game.connections, normalizeConnection(selectedNodes)];
 					selectedNodes = [undefined, undefined];
 				}
 			}
